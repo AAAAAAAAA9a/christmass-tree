@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <title>Animowana Choinka ze Śniegiem</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      background: hsl(210, 32%, 20%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      perspective: 1200px;
+      transform-style: preserve-3d;
+      margin: 0;
+      overflow: hidden;
+    }
+
+    .snow {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .snow__flake {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      background: white;
+      border-radius: 50%;
+      animation-name: snowfall;
+      animation-timing-function: linear;
+      animation-iteration-count: infinite;
+      animation-duration: var(--fall-duration);
+      animation-delay: var(--fall-delay);
+      opacity: var(--opacity);
+    }
+
+    @keyframes snowfall {
+      0% {
+        transform: translate3d(var(--left-ini), 0, 0);
+      }
+      100% {
+        transform: translate3d(var(--left-end), 110vh, 0);
+      }
+    }
+
+    .tree {
+      position: relative;
+      height: 50vmin;
+      width: 25vmin;
+      transform-style: preserve-3d;
+      animation: spin 5s infinite linear;
+      z-index: 2;
+    }
+
+    .tree__light {
+      transform-style: preserve-3d;
+      position: absolute;
+      height: 1vmin;
+      width: 1vmin;
+      border-radius: 50%;
+      left: 50%;
+      transform: translate(-50%, 50%)
+      rotateY(calc(var(--rotate, 0) * 1deg))
+      translate3d(0, 0, calc(var(--radius, 0) * 1vmin));
+      bottom: calc(var(--y, 0) * 1%);
+      animation:
+              flash calc(var(--speed) * 1s) calc(var(--delay) * 1s) infinite steps(4),
+              appear 0.5s calc(var(--appear) * 0.05s) both;
+    }
+
+    .tree__star {
+      height: 5vmin;
+      width: 5vmin;
+      position: absolute;
+      bottom: 150%;
+      left: 50%;
+      transform: translate(-50%, 0);
+      stroke: hsl(45, 80%, 80%);
+      filter: drop-shadow(0 0 2vmin hsl(45, 90%, 90%));
+      stroke-width: 5;
+      stroke-dasharray: 1000;
+      fill: none;
+      animation: stroke 1s calc((var(--delay) * 0.95) * 0.05s) both;
+    }
+
+    @keyframes stroke {
+      from { stroke-dashoffset: -1000; }
+    }
+
+    @keyframes spin {
+      to { transform: rotateY(360deg); }
+    }
+
+    @keyframes appear {
+      from { opacity: 0; }
+    }
+
+    @keyframes flash {
+      0%, 100% { background: #2ecc71; filter: brightness(150%); }
+      20% { background: #9cae27; filter: brightness(150%); }
+      40% { background: #145a32; filter: brightness(150%); }
+      60% { background: #196f3d; filter: brightness(150%); }
+      80% { background: #996122; filter: brightness(150%); }
+    }
+
+    .text {
+      position: fixed;
+      bottom: 10vh;
+      text-align: center;
+      color: white;
+      text-shadow: 0 0 10px rgba(255,255,255,0.5);
+      z-index: 2;
+    }
+
+    .text h1 {
+      font-size: 2.5em;
+      margin-bottom: 0.2em;
+    }
+
+    .text p {
+      font-size: 1.8em;
+      color: #ffa500;
+    }
+  </style>
+</head>
+<body>
+<div class="snow" id="snow"></div>
+<div class="tree" id="tree">
+  <svg class="tree__star" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 113.32 108.44">
+    <path d="M90.19 104.33L57.12 87.38 24.4 105l5.91-36.69L3.44 42.65l36.72-5.72 16.1-33.5L73.06 36.6l36.83 4.97-26.35 26.21z"/>
+  </svg>
+</div>
+<div class="text">
+  <h1>Wesołych Świąt</h1>
+  <p>życzy Artur</p>
+</div>
+
+<script>
+  // Choinka
+  const LIGHTS = 75;
+  const genConfig = index => ({
+    rotate: 1440 / LIGHTS * (LIGHTS - index),
+    radius: 25 / LIGHTS * (LIGHTS - index),
+    y: 150 / LIGHTS * index,
+    speed: Math.random() * 10,
+    delay: Math.random() * -10,
+    appear: index
+  });
+
+  const tree = document.getElementById('tree');
+
+  for (let i = 0; i < LIGHTS; i++) {
+    const light = document.createElement('div');
+    light.className = 'tree__light';
+
+    const config = genConfig(i);
+    Object.entries(config).forEach(([key, value]) => {
+      light.style.setProperty(`--${key}`, value.toString());
+    });
+
+    tree.appendChild(light);
+  }
+
+  // Śnieg
+  const SNOW_FLAKES = 85;
+  const snow = document.getElementById('snow');
+
+  const genSnowConfig = () => ({
+    'fall-duration': Math.random() * 10 + 15 + 's',
+    'fall-delay': (Math.random() * 20) + 's',
+    'opacity': Math.random() * 0.5 + 0.2,
+    'left-ini': (Math.random() * 150 - 50) + 'vw',
+    'left-end': (Math.random() * 150 - 50) + 'vw'
+  });
+
+  for (let i = 0; i < SNOW_FLAKES; i++) {
+    const flake = document.createElement('div');
+    flake.className = 'snow__flake';
+
+    const config = genSnowConfig();
+    Object.entries(config).forEach(([key, value]) => {
+      flake.style.setProperty(`--${key}`, value);
+    });
+
+    snow.appendChild(flake);
+  }
+</script>
+</body>
+</html>
